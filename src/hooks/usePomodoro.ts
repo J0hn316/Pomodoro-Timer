@@ -29,39 +29,35 @@ export const usePomodoro = (): UsePomodoroReturn => {
   const switchMode = useCallback(() => {
     setIsRunning(false);
 
-    setTimeout(() => {
-      setMode((prevMode) => {
-        if (prevMode === 'work') {
-          setTimeLeft(BREAK_DURATION);
-          return 'break';
-        } else {
-          setTimeLeft(WORK_DURATION);
-          setCycleCount((count) => count + 1);
-          return 'work';
-        }
-      });
-    }, 1000);
+    setMode((prevMode) => {
+      if (prevMode === 'work') {
+        setTimeLeft(BREAK_DURATION);
+        return 'break';
+      } else {
+        setTimeLeft(WORK_DURATION);
+        setCycleCount((count) => count + 1);
+        return 'work';
+      }
+    });
   }, []);
 
-  // Update the countdown every second
   useEffect(() => {
-    if (!isRunning) return;
+    if (!isRunning || timeLeft <= 0) return;
 
     intervalRef.current = window.setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev === 1) {
-          // Switch modes when time is up.
-          switchMode();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => prev - 1);
     }, 1000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, switchMode]);
+  }, [isRunning, timeLeft]);
+
+  useEffect(() => {
+    if (timeLeft === 0 && isRunning) {
+      switchMode();
+    }
+  }, [timeLeft, isRunning, switchMode]);
 
   // Control functions
   const start = () => {
